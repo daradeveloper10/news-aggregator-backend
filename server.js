@@ -483,6 +483,19 @@ function generateId() {
 
 const PORT = process.env.PORT || 3000;
 
+// Cleanup old articles (older than 3 days)
+app.delete('/api/articles/cleanup', async (req, res) => {
+  try {
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const result = await db.collection('articles').deleteMany({
+      createdAt: { $lt: threeDaysAgo }
+    });
+    res.json({ message: 'Old articles cleaned up', deletedCount: result.deletedCount });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log('\n========================================');
   console.log('🚀 News Aggregator Server Running');
