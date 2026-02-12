@@ -301,7 +301,7 @@ app.post('/api/fetch-news', async (req, res) => {
     console.log('\n🤖 Generating comprehensive articles with Claude AI...');
     
     let savedCount = 0;
-    const groupsToProcess = groups.slice(0, 5);
+    const groupsToProcess = groups.slice(0, 15);
     
     for (let i = 0; i < groupsToProcess.length; i++) {
       const group = groupsToProcess[i];
@@ -373,9 +373,14 @@ ARTICLE:
           createdAt: new Date(),
         };
         
-        const existing = await db.collection('articles').findOne({
-          headline: { $regex: new RegExp(headline.substring(0, 30), 'i') }
-        });
+
+ const existing = await db.collection('articles').findOne({
+  $or: [
+    { headline: { $regex: new RegExp(headline.substring(0, 30), 'i') } },
+    { headline: headline }
+  ],
+  createdAt: { $gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+});
         
         if (!existing) {
           await db.collection('articles').insertOne(article);
