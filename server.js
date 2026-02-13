@@ -366,6 +366,7 @@ let imageUrl = group.find(a => a.imageUrl)?.imageUrl;
 if (!imageUrl) {
   const keywords = headline.split(' ').slice(0, 3).join(',');
   imageUrl = `https://source.unsplash.com/800x600/?${encodeURIComponent(keywords)}`;
+}
 
  const article = {
           id: generateId(),
