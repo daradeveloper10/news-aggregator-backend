@@ -259,6 +259,7 @@ app.post('/api/fetch-news', async (req, res) => {
           title: cleanTitle(item.title),
           content: cleanContent(item.contentSnippet || item.summary || ''),
           publishedAt: new Date(item.pubDate || Date.now()),
+          imageUrl: item.enclosure?.url || item.media?.thumbnail?.url || item.image?.url || null, // Extract image from RSS
         }));
         
         allArticles.push(...articles);
@@ -358,7 +359,15 @@ ARTICLE:
         
         generatedContent += sourcesSection;
         
-        const article = {
+// Pick the best image from sources (prioritize first source with image)
+let imageUrl = group.find(a => a.imageUrl)?.imageUrl;
+
+// Fallback: use Unsplash if no RSS image found
+if (!imageUrl) {
+  const keywords = headline.split(' ').slice(0, 3).join(',');
+  imageUrl = `https://source.unsplash.com/800x600/?${encodeURIComponent(keywords)}`;
+
+ const article = {
           id: generateId(),
           headline,
           summary,
