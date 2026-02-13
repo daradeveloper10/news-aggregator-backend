@@ -483,6 +483,105 @@ function generateId() {
 }
 
 // ============================================
+
+// Web view for shared articles
+app.get('/article/:id', async (req, res) => {
+  try {
+    const article = await db.collection('articles').findOne({ id: req.params.id });
+    
+    if (!article) {
+      return res.status(404).send('<h1>Article not found</h1>');
+    }
+    
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${article.headline}</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 { 
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .summary {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .content {
+            white-space: pre-wrap;
+            margin-bottom: 30px;
+        }
+        .sources {
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+        }
+        .source {
+            margin-bottom: 10px;
+        }
+        .source a {
+            color: #007AFF;
+            text-decoration: none;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>${article.headline}</h1>
+    <div class="meta">
+        ${new Date(article.publishedAt).toLocaleDateString()} • ${article.sources.length} sources
+    </div>
+    
+    <div class="summary">
+        <strong>Summary:</strong> ${article.summary}
+    </div>
+    
+    <div class="content">${article.generatedContent}</div>
+    
+    <div class="sources">
+        <h3>Sources</h3>
+        ${article.sources.map((source, i) => `
+            <div class="source">
+                [${i + 1}] <a href="${source.url}" target="_blank">${source.name}</a>
+            </div>
+        `).join('')}
+    </div>
+    
+    <div class="footer">
+        Powered by NewsAggregator
+    </div>
+</body>
+</html>
+    `;
+    
+    res.send(html);
+  } catch (error) {
+    res.status(500).send('<h1>Error loading article</h1>');
+  }
+});
+
 // START SERVER
 // ============================================
 
