@@ -368,11 +368,12 @@ if (!imageUrl) {
   imageUrl = `https://source.unsplash.com/800x600/?${encodeURIComponent(keywords)}`;
 }
 
- const article = {
+          const article = {
           id: generateId(),
           headline,
           summary,
           generatedContent,
+          imageUrl,
           sources: group.map(a => ({
             id: a.sourceId,
             name: a.sourceName,
