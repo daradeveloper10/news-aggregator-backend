@@ -365,7 +365,7 @@ let imageUrl = group.find(a => a.imageUrl)?.imageUrl;
 // Fallback: use Unsplash if no RSS image found
 if (!imageUrl) {
   const keywords = headline.split(' ').slice(0, 3).join(',');
-  imageUrl = `https://source.unsplash.com/800x600/?${encodeURIComponent(keywords)}`;
+  imageUrl = `https://picsum.photos/800/600?random=${Date.now()}`;
 }
 
           const article = {
