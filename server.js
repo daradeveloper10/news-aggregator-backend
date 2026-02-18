@@ -593,16 +593,6 @@ app.get('/article/:id', async (req, res) => {
   }
 });
 
-// Initialize preloaded sources (call once on first app launch)
-app.post('/api/sources/initialize-preloaded', async (req, res) => {
-  try {
-    // Check if preloaded sources already exist (by checking for a specific one)
-const techCrunchExists = await db.collection('sources').findOne({ name: "TechCrunch" });
-if (techCrunchExists) {
-  const totalCount = await db.collection('sources').countDocuments();
-  return res.json({ message: 'Preloaded sources already added', count: totalCount });
-}
-
 // Initialize preloaded sources (adds only sources that don't exist)
 app.post('/api/sources/initialize-preloaded', async (req, res) => {
   try {
