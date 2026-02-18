@@ -602,8 +602,10 @@ if (techCrunchExists) {
   const totalCount = await db.collection('sources').countDocuments();
   return res.json({ message: 'Preloaded sources already added', count: totalCount });
 }
-    
-    // Preloaded sources data
+
+// Initialize preloaded sources (adds only sources that don't exist)
+app.post('/api/sources/initialize-preloaded', async (req, res) => {
+  try {
     const preloadedSources = [
       // Technology
       { name: "TechCrunch", url: "https://techcrunch.com/feed/", category: "technology", enabled: false },
@@ -677,18 +679,32 @@ if (techCrunchExists) {
       { name: "Rolling Stone", url: "https://www.rollingstone.com/feed/", category: "entertainment", enabled: false }
     ];
     
-    // Add createdAt to each source
-    const sourcesWithDates = preloadedSources.map(source => ({
+    // Get existing source names
+    const existingSources = await db.collection('sources').find({}, { projection: { name: 1 } }).toArray();
+    const existingNames = new Set(existingSources.map(s => s.name));
+    
+    // Filter to only new sources
+    const newSources = preloadedSources.filter(source => !existingNames.has(source.name));
+    
+    if (newSources.length === 0) {
+      const totalCount = await db.collection('sources').countDocuments();
+      return res.json({ message: 'All preloaded sources already exist', count: totalCount, added: 0 });
+    }
+    
+    // Add missing sources
+    const sourcesWithDates = newSources.map(source => ({
       ...source,
       id: generateId(),
       createdAt: new Date()
     }));
     
     const result = await db.collection('sources').insertMany(sourcesWithDates);
+    const totalCount = await db.collection('sources').countDocuments();
     
     res.json({ 
-      message: 'Preloaded sources initialized successfully',
-      count: result.insertedCount 
+      message: 'Preloaded sources added successfully',
+      added: result.insertedCount,
+      total: totalCount
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
