@@ -593,6 +593,107 @@ app.get('/article/:id', async (req, res) => {
   }
 });
 
+// Initialize preloaded sources (call once on first app launch)
+app.post('/api/sources/initialize-preloaded', async (req, res) => {
+  try {
+    // Check if already initialized
+    const existingCount = await db.collection('sources').countDocuments();
+    if (existingCount > 0) {
+      return res.json({ message: 'Sources already initialized', count: existingCount });
+    }
+    
+    // Preloaded sources data
+    const preloadedSources = [
+      // Technology
+      { name: "TechCrunch", url: "https://techcrunch.com/feed/", category: "technology", enabled: false },
+      { name: "The Verge", url: "https://www.theverge.com/rss/index.xml", category: "technology", enabled: false },
+      { name: "Ars Technica", url: "https://feeds.arstechnica.com/arstechnica/index", category: "technology", enabled: false },
+      { name: "Wired", url: "https://www.wired.com/feed/rss", category: "technology", enabled: false },
+      { name: "Engadget", url: "https://www.engadget.com/rss.xml", category: "technology", enabled: false },
+      { name: "CNET", url: "https://www.cnet.com/rss/news/", category: "technology", enabled: false },
+      { name: "ZDNet", url: "https://www.zdnet.com/news/rss.xml", category: "technology", enabled: false },
+      { name: "Gizmodo", url: "https://gizmodo.com/rss", category: "technology", enabled: false },
+      { name: "Lifehacker", url: "https://lifehacker.com/rss", category: "technology", enabled: false },
+      { name: "MIT Technology Review", url: "https://www.technologyreview.com/feed/", category: "technology", enabled: false },
+      { name: "VentureBeat", url: "https://venturebeat.com/feed/", category: "technology", enabled: false },
+      { name: "Mashable", url: "https://mashable.com/feeds/rss/all", category: "technology", enabled: false },
+      { name: "TNW", url: "https://thenextweb.com/feed/", category: "technology", enabled: false },
+      { name: "Digital Trends", url: "https://www.digitaltrends.com/feed/", category: "technology", enabled: false },
+      { name: "Tom's Hardware", url: "https://www.tomshardware.com/feeds/all", category: "technology", enabled: false },
+      { name: "AnandTech", url: "https://www.anandtech.com/rss/", category: "technology", enabled: false },
+      { name: "9to5Mac", url: "https://9to5mac.com/feed/", category: "technology", enabled: false },
+      { name: "MacRumors", url: "https://www.macrumors.com/feed/", category: "technology", enabled: false },
+      { name: "Android Authority", url: "https://www.androidauthority.com/feed/", category: "technology", enabled: false },
+      { name: "XDA Developers", url: "https://www.xda-developers.com/feed/", category: "technology", enabled: false },
+      
+      // General News
+      { name: "BBC News", url: "https://feeds.bbci.co.uk/news/rss.xml", category: "general", enabled: false },
+      { name: "NPR News", url: "https://feeds.npr.org/1001/rss.xml", category: "general", enabled: false },
+      { name: "The Guardian", url: "https://www.theguardian.com/world/rss", category: "general", enabled: false },
+      { name: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", category: "general", enabled: false },
+      { name: "PBS NewsHour", url: "https://www.pbs.org/newshour/feeds/rss/headlines", category: "general", enabled: false },
+      { name: "TIME", url: "https://time.com/feed/", category: "general", enabled: false },
+      { name: "Newsweek", url: "https://www.newsweek.com/rss", category: "general", enabled: false },
+      { name: "The Independent", url: "https://www.independent.co.uk/rss", category: "general", enabled: false },
+      { name: "ABC News", url: "https://abcnews.go.com/abcnews/topstories", category: "general", enabled: false },
+      { name: "CBS News", url: "https://www.cbsnews.com/latest/rss/main", category: "general", enabled: false },
+      { name: "NBC News", url: "https://feeds.nbcnews.com/nbcnews/public/news", category: "general", enabled: false },
+      { name: "Axios", url: "https://api.axios.com/feed/", category: "general", enabled: false },
+      { name: "Vice News", url: "https://www.vice.com/en/rss", category: "general", enabled: false },
+      { name: "Vox", url: "https://www.vox.com/rss/index.xml", category: "general", enabled: false },
+      { name: "ProPublica", url: "https://www.propublica.org/feeds/propublica/main", category: "general", enabled: false },
+      
+      // Politics
+      { name: "Politico", url: "https://www.politico.com/rss/politics08.xml", category: "politics", enabled: false },
+      { name: "The Hill", url: "https://thehill.com/feed/", category: "politics", enabled: false },
+      { name: "RealClearPolitics", url: "https://www.realclearpolitics.com/index.xml", category: "politics", enabled: false },
+      { name: "FiveThirtyEight", url: "https://fivethirtyeight.com/feed/", category: "politics", enabled: false },
+      { name: "Roll Call", url: "https://www.rollcall.com/news/feed", category: "politics", enabled: false },
+      
+      // Sports
+      { name: "ESPN", url: "https://www.espn.com/espn/rss/news", category: "sports", enabled: false },
+      { name: "Sports Illustrated", url: "https://www.si.com/rss/si_topstories.rss", category: "sports", enabled: false },
+      { name: "Bleacher Report", url: "https://bleacherreport.com/articles/feed", category: "sports", enabled: false },
+      { name: "Yahoo Sports", url: "https://sports.yahoo.com/rss/", category: "sports", enabled: false },
+      { name: "BBC Sport", url: "https://feeds.bbci.co.uk/sport/rss.xml", category: "sports", enabled: false },
+      
+      // Business
+      { name: "Bloomberg", url: "https://feeds.bloomberg.com/markets/news.rss", category: "business", enabled: false },
+      { name: "CNBC", url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", category: "business", enabled: false },
+      { name: "MarketWatch", url: "https://feeds.marketwatch.com/marketwatch/topstories/", category: "business", enabled: false },
+      { name: "Business Insider", url: "https://www.businessinsider.com/rss", category: "business", enabled: false },
+      { name: "Forbes", url: "https://www.forbes.com/real-time/feed2/", category: "business", enabled: false },
+      
+      // Science
+      { name: "Science Daily", url: "https://www.sciencedaily.com/rss/all.xml", category: "science", enabled: false },
+      { name: "Phys.org", url: "https://phys.org/rss-feed/", category: "science", enabled: false },
+      { name: "Scientific American", url: "https://www.scientificamerican.com/feed/", category: "science", enabled: false },
+      { name: "Space.com", url: "https://www.space.com/feeds/all", category: "science", enabled: false },
+      
+      // Entertainment
+      { name: "Variety", url: "https://variety.com/feed/", category: "entertainment", enabled: false },
+      { name: "The Hollywood Reporter", url: "https://www.hollywoodreporter.com/feed/", category: "entertainment", enabled: false },
+      { name: "Rolling Stone", url: "https://www.rollingstone.com/feed/", category: "entertainment", enabled: false }
+    ];
+    
+    // Add createdAt to each source
+    const sourcesWithDates = preloadedSources.map(source => ({
+      ...source,
+      id: generateId(),
+      createdAt: new Date()
+    }));
+    
+    const result = await db.collection('sources').insertMany(sourcesWithDates);
+    
+    res.json({ 
+      message: 'Preloaded sources initialized successfully',
+      count: result.insertedCount 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // START SERVER
 // ============================================
 
