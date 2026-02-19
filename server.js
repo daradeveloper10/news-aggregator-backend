@@ -259,8 +259,12 @@ app.post('/api/fetch-news', async (req, res) => {
           title: cleanTitle(item.title),
           content: cleanContent(item.contentSnippet || item.summary || ''),
           publishedAt: new Date(item.pubDate || Date.now()),
-          imageUrl: item.enclosure?.url || item.media?.thumbnail?.url || item.image?.url || null, // Extract image from RSS
-        }));
+          imageUrl: item.enclosure?.url || 
+          item['media:content']?.$?.url || 
+          item['media:thumbnail']?.$?.url ||
+          item.image?.url || 
+          item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] ||
+          null
         
         allArticles.push(...articles);
         console.log(`  ✓ Got ${articles.length} articles`);
