@@ -260,11 +260,12 @@ app.post('/api/fetch-news', async (req, res) => {
           content: cleanContent(item.contentSnippet || item.summary || ''),
           publishedAt: new Date(item.pubDate || Date.now()),
           imageUrl: item.enclosure?.url || 
-          item['media:content']?.$?.url || 
-          item['media:thumbnail']?.$?.url ||
-          item.image?.url || 
-          item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] ||
-          null
+                     item['media:content']?.$?.url || 
+                     item['media:thumbnail']?.$?.url ||
+                     item.image?.url || 
+                     item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] ||
+                     null
+        }));
         
         allArticles.push(...articles);
         console.log(`  ✓ Got ${articles.length} articles`);
